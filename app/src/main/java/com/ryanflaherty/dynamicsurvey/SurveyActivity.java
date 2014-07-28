@@ -19,25 +19,18 @@ import android.view.View;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
-
-
-
+import java.util.HashMap;
+import java.util.Iterator;
 
 public class SurveyActivity extends Activity {
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_survey);
-        String result = "fail";
-        try {
-            JSONObject json = new JSONObject("{\"name\":\"Ryan\"}");
-            result = json.getString("name");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        Log.d("SURVEY", "Result [" + result + "]");
+
+        //Keeping the create clean, moved this testing crap to a private method
+        buildFromJSON();
 
         //Grab the main view for this layout
         TableLayout activitySurveyTableLayout = (TableLayout)findViewById(R.id.activitySurveyTableLayout);
@@ -50,11 +43,9 @@ public class SurveyActivity extends Activity {
         types.add("blue");
         types.add("green");
         activitySurveyTableLayout.addView(buildPickerLabelPair("types", types, activitySurveyTableLayout.getContext()));
-
-       activitySurveyTableLayout.addView(buildNumberInputLabelPair("Numbers!", activitySurveyTableLayout.getContext()));
+        activitySurveyTableLayout.addView(buildNumberInputLabelPair("Numbers!", activitySurveyTableLayout.getContext()));
 
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -116,5 +107,42 @@ public class SurveyActivity extends Activity {
         TableRow theRow = new TableRow(context);
         theRow.addView(linearView);
         return theRow;
+    }
+
+    private void buildFromJSON(){
+        HashMap<String, JSONObject> hashMap = new HashMap<String, JSONObject>();
+        try {
+            JSONObject json = new JSONObject("{\"1\":{\"name\":\"Ryan\"},\"2\":{\"test\":\"other\"}}");
+            //Go through each item in the json
+            Iterator<?> jsonIterator = json.keys();
+            while (jsonIterator.hasNext()){
+                String key = jsonIterator.next().toString();
+                if (json.get(key) instanceof JSONObject){
+                    hashMap.put(key, (JSONObject)json.get(key));
+                }
+            }
+            Log.d(this.getClass().getSimpleName(), "Finished adding to hashmap");
+            for (Integer i = 1; i <= hashMap.size(); i++){
+                JSONObject innerJSON = hashMap.get(i.toString());
+                //verify that there is only 1 key and that is is something we are expecting
+                Iterator<?> keyIterator = innerJSON.keys();
+                int counter = 0;
+                Log.d("Keys: ", innerJSON.keys().toString());
+                String inputType = null;
+                while(keyIterator.hasNext()){
+                    inputType = keyIterator.next().toString();
+                    //Increment counter
+                    counter++;
+                }
+                if (counter == 1){
+                    Log.d(this.getClass().getSimpleName(), "Input type found: "+inputType);
+                }else{
+                    Log.e(this.getClass().getSimpleName(), "Improperly formatted JSON");
+                }
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 }
