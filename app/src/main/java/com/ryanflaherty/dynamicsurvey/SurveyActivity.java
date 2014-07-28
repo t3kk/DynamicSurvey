@@ -3,6 +3,8 @@ package com.ryanflaherty.dynamicsurvey;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.text.InputType;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -12,8 +14,12 @@ import android.widget.TableLayout;
 import android.widget.EditText;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.view.View;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import java.util.ArrayList;
+
 
 
 
@@ -24,16 +30,29 @@ public class SurveyActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_survey);
+        String result = "fail";
+        try {
+            JSONObject json = new JSONObject("{\"name\":\"Ryan\"}");
+            result = json.getString("name");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        Log.d("SURVEY", "Result [" + result + "]");
+
         //Grab the main view for this layout
         TableLayout activitySurveyTableLayout = (TableLayout)findViewById(R.id.activitySurveyTableLayout);
         //Add input for first name and last name
         activitySurveyTableLayout.addView(buildTextInputLabelPair("First Name", activitySurveyTableLayout.getContext()));
         activitySurveyTableLayout.addView(buildTextInputLabelPair("Last Name", activitySurveyTableLayout.getContext()));
+
         ArrayList<String> types = new ArrayList<String>();
         types.add("red");
         types.add("blue");
         types.add("green");
         activitySurveyTableLayout.addView(buildPickerLabelPair("types", types, activitySurveyTableLayout.getContext()));
+
+       activitySurveyTableLayout.addView(buildNumberInputLabelPair("Numbers!", activitySurveyTableLayout.getContext()));
+
     }
 
 
@@ -56,9 +75,23 @@ public class SurveyActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    private TableRow buildNumberInputLabelPair(String inputName, Context context)
+    {
+        LinearLayout linearView = new LinearLayout(context);
+        linearView.setOrientation(LinearLayout.VERTICAL);
+        TextView label = new TextView(context);
+        label.setTextAppearance(context, android.R.style.TextAppearance_Medium);
+        label.setText(inputName);
+        linearView.addView(label);
+
+        EditText textField = new EditText(context);
+        textField.setInputType(InputType.TYPE_CLASS_NUMBER);
+        linearView.addView(textField);
+
+        return wrapInRow(linearView, context);
+    }
+
     private TableRow buildTextInputLabelPair(String inputName, Context context){
-        //Make a row to hold a linear layout for input
-        TableRow theRow = new TableRow(context);
         //Build the linear layout
         LinearLayout linearView = new LinearLayout(context);
         linearView.setOrientation(LinearLayout.VERTICAL);
@@ -71,14 +104,11 @@ public class SurveyActivity extends Activity {
         EditText textField = new EditText(context);
         textField.setHint(inputName);
         linearView.addView(textField);
-        //Add linear layout to the row
-        theRow.addView(linearView);
 
-        return theRow;
+        return wrapInRow(linearView, context);
     }
 
     private TableRow buildPickerLabelPair(String labelName, ArrayList<String> choices, Context context) {
-        TableRow theRow = new TableRow(context);
         //Build the linear layout
         LinearLayout linearView = new LinearLayout(context);
         linearView.setOrientation(LinearLayout.VERTICAL);
@@ -95,7 +125,12 @@ public class SurveyActivity extends Activity {
         spinner.setAdapter(arrayAdapter);
         linearView.addView(spinner);
 
-        theRow.addView(linearView);
-        return  theRow;
+        return wrapInRow(linearView, context);
+    }
+
+    private TableRow wrapInRow(View view, Context context){
+        TableRow theRow = new TableRow(context);
+        theRow.addView(view);
+        return theRow;
     }
 }
