@@ -29,8 +29,10 @@ public class SurveyActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_survey);
 
+        //Make some JSON
+        String jsonString = "{\"1\":{\"name\":\"Ryan\"},\"2\":{\"test\":\"other\"}}";
         //Keeping the create clean, moved this testing crap to a private method
-        buildFromJSON();
+        parseFromJSON(jsonString);
 
         //Grab the main view for this layout
         TableLayout activitySurveyTableLayout = (TableLayout)findViewById(R.id.activitySurveyTableLayout);
@@ -109,10 +111,11 @@ public class SurveyActivity extends Activity {
         return theRow;
     }
 
-    private void buildFromJSON(){
+    //TODO: return a list in order from 1 and up, with both the type and label inside.  Maybe String[][] for now if im lazy?
+    private void parseFromJSON(String jsonString){
         HashMap<String, JSONObject> hashMap = new HashMap<String, JSONObject>();
         try {
-            JSONObject json = new JSONObject("{\"1\":{\"name\":\"Ryan\"},\"2\":{\"test\":\"other\"}}");
+            JSONObject json = new JSONObject(jsonString);
             //Go through each item in the json
             Iterator<?> jsonIterator = json.keys();
             while (jsonIterator.hasNext()){
@@ -127,7 +130,6 @@ public class SurveyActivity extends Activity {
                 //verify that there is only 1 key and that is is something we are expecting
                 Iterator<?> keyIterator = innerJSON.keys();
                 int counter = 0;
-                Log.d("Keys: ", innerJSON.keys().toString());
                 String inputType = null;
                 while(keyIterator.hasNext()){
                     inputType = keyIterator.next().toString();
