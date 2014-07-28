@@ -16,6 +16,7 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.view.View;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import java.util.ArrayList;
@@ -30,23 +31,58 @@ public class SurveyActivity extends Activity {
         setContentView(R.layout.activity_survey);
 
         //Make some JSON
-        String jsonString = "{\"1\":{\"name\":\"Ryan\"},\"2\":{\"test\":\"other\"}}";
-        //Keeping the create clean, moved this testing crap to a private method
-        parseFromJSON(jsonString);
+        String jsonString = "{\"1\":{\"text\":\"First Name\"},\"2\":{\"number\":\"Zip Code\"},\"3\":{\"picker\":{\"label\":\"LIST!\",\"list\":[\"blah\",\"meh\"]}}}";
+
 
         //Grab the main view for this layout
         TableLayout activitySurveyTableLayout = (TableLayout)findViewById(R.id.activitySurveyTableLayout);
+        //Keeping the create clean, moved this testing crap to a private method
+        String[][] inputs = parseFromJSON(jsonString);
+        createInputViews(inputs, activitySurveyTableLayout);
         //Add input for first name and last name
-        activitySurveyTableLayout.addView(buildTextInputLabelPair("First Name", activitySurveyTableLayout.getContext()));
-        activitySurveyTableLayout.addView(buildTextInputLabelPair("Last Name", activitySurveyTableLayout.getContext()));
+//        activitySurveyTableLayout.addView(buildTextInputLabelPair("First Name", activitySurveyTableLayout.getContext()));
+//        activitySurveyTableLayout.addView(buildTextInputLabelPair("Last Name", activitySurveyTableLayout.getContext()));
+//
+//        ArrayList<String> types = new ArrayList<String>();
+//        types.add("red");
+//        types.add("blue");
+//        types.add("green");
+//        activitySurveyTableLayout.addView(buildPickerLabelPair("types", types, activitySurveyTableLayout.getContext()));
+//        activitySurveyTableLayout.addView(buildNumberInputLabelPair("Numbers!", activitySurveyTableLayout.getContext()));
+    }
 
-        ArrayList<String> types = new ArrayList<String>();
-        types.add("red");
-        types.add("blue");
-        types.add("green");
-        activitySurveyTableLayout.addView(buildPickerLabelPair("types", types, activitySurveyTableLayout.getContext()));
-        activitySurveyTableLayout.addView(buildNumberInputLabelPair("Numbers!", activitySurveyTableLayout.getContext()));
+    private void createInputViews(String[][] inputs, TableLayout tableLayout){
+        for (int i = 0; i < inputs.length; i++){
+            //This will be a series of ugly if, else statements until i think of a pretty way, too bad android isn't java 1.7...
+            String type = inputs[i][0];
+            String label = inputs[i][1];
+            //TODO: Add constants for input types
+            if ("text".equalsIgnoreCase(type)){
+                tableLayout.addView(buildTextInputLabelPair(label, tableLayout.getContext()));
+            }else if ("number".equalsIgnoreCase(type)) {
+                tableLayout.addView(buildNumberInputLabelPair(label, tableLayout.getContext()));
+            }else if ("picker".equalsIgnoreCase(type)){
+                //In this case, label is actually JSON...
+                try {
+                    JSONObject json = new JSONObject(label);
+                    label = json.getString("label");
+                    JSONArray jsonArray = json.getJSONArray("list");
+                    //Convert it to an ArrayList
+                    ArrayList<String> arrayList = new ArrayList<String>();
+                    for (int c = 0; c<jsonArray.length(); c++){
+                        arrayList.add(jsonArray.get(c).toString());
+                    }
+                    tableLayout.addView(buildPickerLabelPair(label, arrayList, tableLayout.getContext()));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    Log.e(this.getClass().getSimpleName(), "Problem parsing JSON for list picker");
+                }
+            }else{
 
+                //This is probably going to be unreachable, since I hope to validate in the json part.
+                Log.e(this.getClass().getSimpleName(), "ERROR, input type not defined: ["+inputs[i][0]+"]");
+            }
+        }
     }
 
     @Override
@@ -111,9 +147,12 @@ public class SurveyActivity extends Activity {
         return theRow;
     }
 
-    //TODO: return a list in order from 1 and up, with both the type and label inside.  Maybe String[][] for now if im lazy?
-    private void parseFromJSON(String jsonString){
+    //TODO: I can't use string[][] because the list picker won't fit into that.
+    private String[][] parseFromJSON(String jsonString){
+        //A hashmap I plan to use later...
         HashMap<String, JSONObject> hashMap = new HashMap<String, JSONObject>();
+        //Set to empty array so I don't have to null check it.  Let me know if this is bad...
+        String[][] inputs = new String[0][0];
         try {
             JSONObject json = new JSONObject(jsonString);
             //Go through each item in the json
@@ -124,6 +163,8 @@ public class SurveyActivity extends Activity {
                     hashMap.put(key, (JSONObject)json.get(key));
                 }
             }
+            //Now we know how big the array must be
+            inputs = new String[hashMap.size()][2];
             Log.d(this.getClass().getSimpleName(), "Finished adding to hashmap");
             for (Integer i = 1; i <= hashMap.size(); i++){
                 JSONObject innerJSON = hashMap.get(i.toString());
@@ -138,13 +179,16 @@ public class SurveyActivity extends Activity {
                 }
                 if (counter == 1){
                     Log.d(this.getClass().getSimpleName(), "Input type found: "+inputType);
+                    //Store into the array and switch to use 0 for 1;
+                    inputs[i-1][0] = inputType;
+                    inputs[i-1][1] = innerJSON.getString(inputType);
                 }else{
                     Log.e(this.getClass().getSimpleName(), "Improperly formatted JSON");
                 }
             }
-
         } catch (JSONException e) {
             e.printStackTrace();
         }
+        return inputs;
     }
 }
