@@ -75,40 +75,33 @@ public class SurveyActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    private TableRow buildNumberInputLabelPair(String inputName, Context context)
+    private TableRow buildNumberInputLabelPair(String labelName, Context context)
     {
-        LinearLayout linearView = new LinearLayout(context);
-        linearView.setOrientation(LinearLayout.VERTICAL);
-        TextView label = new TextView(context);
-        label.setTextAppearance(context, android.R.style.TextAppearance_Medium);
-        label.setText(inputName);
-        linearView.addView(label);
-
         EditText textField = new EditText(context);
         textField.setInputType(InputType.TYPE_CLASS_NUMBER);
-        linearView.addView(textField);
 
-        return wrapInRow(linearView, context);
+        return wrapLabelAndInput(labelName, textField, context);
     }
 
-    private TableRow buildTextInputLabelPair(String inputName, Context context){
-        //Build the linear layout
-        LinearLayout linearView = new LinearLayout(context);
-        linearView.setOrientation(LinearLayout.VERTICAL);
-        //Add the label
-        TextView label = new TextView(context);
-        label.setTextAppearance(context, android.R.style.TextAppearance_Medium);
-        label.setText(inputName);
-        linearView.addView(label);
-        //Add the field
+    private TableRow buildTextInputLabelPair(String labelName, Context context){
+        //create the field
         EditText textField = new EditText(context);
-        textField.setHint(inputName);
-        linearView.addView(textField);
+        textField.setHint(labelName);
 
-        return wrapInRow(linearView, context);
+        return wrapLabelAndInput(labelName, textField, context);
     }
 
     private TableRow buildPickerLabelPair(String labelName, ArrayList<String> choices, Context context) {
+        //Make the picker
+        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, choices);
+        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        Spinner spinner = new Spinner(context);
+        spinner.setAdapter(arrayAdapter);
+
+        return wrapLabelAndInput(labelName, spinner, context);
+    }
+
+    private TableRow wrapLabelAndInput(String labelName, View inputView, Context context){
         //Build the linear layout
         LinearLayout linearView = new LinearLayout(context);
         linearView.setOrientation(LinearLayout.VERTICAL);
@@ -116,21 +109,12 @@ public class SurveyActivity extends Activity {
         TextView label = new TextView(context);
         label.setTextAppearance(context, android.R.style.TextAppearance_Medium);
         label.setText(labelName);
+        //Add the label and input to the linear view
         linearView.addView(label);
-
-        //Make the picker
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, choices);
-        arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        Spinner spinner = new Spinner(context);
-        spinner.setAdapter(arrayAdapter);
-        linearView.addView(spinner);
-
-        return wrapInRow(linearView, context);
-    }
-
-    private TableRow wrapInRow(View view, Context context){
+        linearView.addView(inputView);
+        //Wrap it in a row
         TableRow theRow = new TableRow(context);
-        theRow.addView(view);
+        theRow.addView(linearView);
         return theRow;
     }
 }
